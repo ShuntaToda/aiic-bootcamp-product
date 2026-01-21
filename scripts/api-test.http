@@ -1,4 +1,4 @@
-### ECサイトAPI テスト - REST Client
+### 車用品専門ECサイトAPI テスト - REST Client
 ### API Gateway URL
 @baseUrl = https://5y67wr0uvj.execute-api.ap-northeast-1.amazonaws.com/v1
 
@@ -70,45 +70,45 @@ Content-Type: application/json
 # 3. 商品管理
 ################################################################################
 
-### 商品作成 1 - MacBook Pro
+### 商品作成 1 - 高性能タイヤ
 # @name createProduct1
 POST {{baseUrl}}/products
 Content-Type: application/json
 
 {
-  "name": "MacBook Pro",
-  "description": "高性能ノートパソコン",
-  "price": 250000,
-  "stock": 10,
-  "category": "electronics",
-  "imageUrl": "https://example.com/macbook.jpg"
+  "name": "ブリヂストン POTENZA S007A 245/40R18",
+  "description": "ハイパフォーマンスタイヤ。優れたグリップ力と静粛性を実現",
+  "price": 28500,
+  "stock": 20,
+  "category": "Tires",
+  "imageUrl": "https://example.com/tire-potenza.jpg"
 }
 
-### 商品作成 2 - iPhone
+### 商品作成 2 - エンジンオイル
 # @name createProduct2
 POST {{baseUrl}}/products
 Content-Type: application/json
 
 {
-  "name": "iPhone 15 Pro",
-  "description": "最新スマートフォン",
-  "price": 150000,
-  "stock": 20,
-  "category": "electronics",
-  "imageUrl": "https://example.com/iphone.jpg"
+  "name": "Castrol EDGE 5W-30 4L 全合成油",
+  "description": "最高級全合成エンジンオイル。優れたエンジン保護性能",
+  "price": 5980,
+  "stock": 50,
+  "category": "Oil",
+  "imageUrl": "https://example.com/oil-castrol.jpg"
 }
 
-### 商品作成 3 - AirPods
+### 商品作成 3 - カーナビ
 POST {{baseUrl}}/products
 Content-Type: application/json
 
 {
-  "name": "AirPods Pro",
-  "description": "ノイズキャンセリング機能付きイヤホン",
-  "price": 39800,
-  "stock": 50,
-  "category": "electronics",
-  "imageUrl": "https://example.com/airpods.jpg"
+  "name": "パナソニック ストラーダ CN-F1XVD 9インチ",
+  "description": "大画面9インチディスプレイ搭載の高性能カーナビゲーション",
+  "price": 89800,
+  "stock": 15,
+  "category": "Electronics",
+  "imageUrl": "https://example.com/navi-panasonic.jpg"
 }
 
 ### 全商品取得
@@ -136,34 +136,34 @@ Content-Type: application/json
 # 4. カート管理
 ################################################################################
 
-### カートに商品追加 1 - MacBook Pro
+### カートに商品追加 1 - タイヤ
 POST {{baseUrl}}/carts/{{userId}}/items
 Content-Type: application/json
 
 {
   "productId": "{{product1Id}}",
-  "quantity": 2
+  "quantity": 4
 }
 
-### カートに商品追加 2 - iPhone
+### カートに商品追加 2 - エンジンオイル
 POST {{baseUrl}}/carts/{{userId}}/items
 Content-Type: application/json
 
 {
   "productId": "{{product2Id}}",
-  "quantity": 1
+  "quantity": 2
 }
 
 ### ユーザーのカート取得
 GET {{baseUrl}}/carts/{{userId}}
 Content-Type: application/json
 
-### カート内商品の数量更新
+### カート内商品の数量更新（タイヤ数量変更）
 PUT {{baseUrl}}/carts/{{userId}}/items/{{product1Id}}
 Content-Type: application/json
 
 {
-  "quantity": 3
+  "quantity": 8
 }
 
 ### カートから商品削除
@@ -188,16 +188,16 @@ Content-Type: application/json
   "items": [
     {
       "productId": "{{product1Id}}",
-      "quantity": 3,
-      "price": 240000
+      "quantity": 4,
+      "price": 28500
     },
     {
       "productId": "{{product2Id}}",
-      "quantity": 1,
-      "price": 150000
+      "quantity": 2,
+      "price": 5980
     }
   ],
-  "totalAmount": 870000,
+  "totalAmount": 125960,
   "shippingAddress": {
     "zipCode": "100-0001",
     "prefecture": "東京都",
@@ -239,7 +239,82 @@ Content-Type: application/json
 }
 
 ################################################################################
-# エラーケースのテスト
+# 6. レビュー管理
+################################################################################
+
+### レビュー作成 - 商品1（タイヤ）へのレビュー
+# @name createReview
+POST {{baseUrl}}/reviews
+Content-Type: application/json
+
+{
+  "productId": "{{product1Id}}",
+  "userId": "{{userId}}",
+  "rating": 5,
+  "title": "グリップ力抜群！",
+  "comment": "雨の日でも安定した走行ができます。静粛性も高く満足しています。"
+}
+
+### 商品のレビュー一覧取得
+GET {{baseUrl}}/reviews/product/{{product1Id}}
+Content-Type: application/json
+
+### ユーザーのレビュー一覧取得
+GET {{baseUrl}}/reviews/user/{{userId}}
+Content-Type: application/json
+
+### レビュー更新
+PUT {{baseUrl}}/reviews/{{product1Id}}/{{createReview.response.body.review.reviewId}}
+Content-Type: application/json
+
+{
+  "rating": 4,
+  "title": "グリップ力が良い",
+  "comment": "全体的に満足していますが、価格がやや高めです。"
+}
+
+### レビューを参考になったとマーク
+POST {{baseUrl}}/reviews/{{product1Id}}/{{createReview.response.body.review.reviewId}}/helpful
+Content-Type: application/json
+
+{
+  "userId": "another-user-id"
+}
+
+### レビュー削除（最後に実行）
+# DELETE {{baseUrl}}/reviews/{{product1Id}}/{{createReview.response.body.review.reviewId}}
+# Content-Type: application/json
+
+################################################################################
+# 7. 商品検索・フィルタリング
+################################################################################
+
+### カテゴリで検索 - タイヤ
+GET {{baseUrl}}/products/search?category=Tires
+Content-Type: application/json
+
+### 価格範囲で検索 - 1万円〜3万円
+GET {{baseUrl}}/products/search?minPrice=10000&maxPrice=30000
+Content-Type: application/json
+
+### 評価で検索 - 4つ星以上
+GET {{baseUrl}}/products/search?minRating=4
+Content-Type: application/json
+
+### キーワード検索 - オイル
+GET {{baseUrl}}/products/search?keyword=オイル
+Content-Type: application/json
+
+### 複合検索 - タイヤカテゴリ、2万円以上、4つ星以上
+GET {{baseUrl}}/products/search?category=Tires&minPrice=20000&minRating=4
+Content-Type: application/json
+
+### おすすめ商品取得
+GET {{baseUrl}}/products/recommendations/{{product1Id}}
+Content-Type: application/json
+
+################################################################################
+# 8. エラーケースのテスト
 ################################################################################
 
 ### 存在しないユーザー取得（404エラー）
