@@ -6,7 +6,19 @@ from strands import Agent
 from strands.models import BedrockModel
 from strands.tools import tool
 from tools.apigateway_tool import execute_api, list_apis
-from tools.dynamodb_tool import create_item, list_tables, query_items, read_item, update_item
+from tools.cloudwatch_tool import (
+    get_agent_core_logs,
+    get_logs,
+    list_log_groups,
+    list_log_streams,
+)
+from tools.dynamodb_tool import (
+    create_item,
+    list_tables,
+    query_items,
+    read_item,
+    update_item,
+)
 from tools.lambda_tool import get_lambda_code, invoke_lambda, list_lambdas
 
 logging.basicConfig(level=logging.INFO)
@@ -89,6 +101,37 @@ def api_list() -> list:
     return list_apis()
 
 
+@tool
+def cloudwatch_list_log_groups(prefix: str = None) -> list:
+    """CloudWatch Logsのロググループ一覧を取得します"""
+    return list_log_groups(prefix)
+
+
+@tool
+def cloudwatch_list_log_streams(log_group_name: str, limit: int = 10) -> list:
+    """指定したロググループのログストリーム一覧を取得します"""
+    return list_log_streams(log_group_name, limit)
+
+
+@tool
+def cloudwatch_get_logs(
+    log_group_name: str,
+    log_stream_name: str = None,
+    start_time_minutes_ago: int = 60,
+    limit: int = 100,
+) -> list:
+    """CloudWatch Logsからログを取得します"""
+    return get_logs(log_group_name, log_stream_name, start_time_minutes_ago, limit)
+
+
+@tool
+def cloudwatch_get_agent_core_logs(
+    start_time_minutes_ago: int = 60, limit: int = 100
+) -> dict:
+    """Agent Core関連のログを取得します"""
+    return get_agent_core_logs(start_time_minutes_ago, limit)
+
+
 @app.entrypoint
 async def run_agent(payload):
     try:
@@ -106,6 +149,10 @@ async def run_agent(payload):
             dynamodb_list,
             api_execute,
             api_list,
+            cloudwatch_list_log_groups,
+            cloudwatch_list_log_streams,
+            cloudwatch_get_logs,
+            cloudwatch_get_agent_core_logs,
         ]
 
         agent = Agent(

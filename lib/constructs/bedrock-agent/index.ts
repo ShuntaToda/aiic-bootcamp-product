@@ -348,6 +348,31 @@ export class BedrockAgentConstruct extends Construct {
           'dynamodb:DeleteItem',
           'dynamodb:Query',
           'dynamodb:Scan',
+          'dynamodb:ListTables',
+        ],
+        resources: ['*'],
+      })
+    );
+
+    // API Gateway 読み取り権限（apigateway_tool用）
+    this.runtime.addToRolePolicy(
+      new iam.PolicyStatement({
+        sid: 'ApiGatewayReadAccess',
+        effect: iam.Effect.ALLOW,
+        actions: ['*'],
+        resources: ['*'],
+      })
+    );
+
+    // CloudWatch Logs 読み取り権限（cloudwatch_tool用）
+    this.runtime.addToRolePolicy(
+      new iam.PolicyStatement({
+        sid: 'CloudWatchLogsReadAccess',
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'logs:FilterLogEvents',
+          'logs:GetLogEvents',
+          'logs:DescribeLogStreams',
         ],
         resources: ['*'],
       })
