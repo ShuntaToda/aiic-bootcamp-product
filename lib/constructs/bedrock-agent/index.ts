@@ -370,9 +370,12 @@ export class BedrockAgentConstruct extends Construct {
         sid: 'CloudWatchLogsReadAccess',
         effect: iam.Effect.ALLOW,
         actions: [
+          'logs:Describe*',
+          'logs:Get*',
           'logs:FilterLogEvents',
-          'logs:GetLogEvents',
-          'logs:DescribeLogStreams',
+          'logs:StartQuery',
+          'logs:StopQuery',
+          'logs:TestMetricFilter',
         ],
         resources: ['*'],
       })
