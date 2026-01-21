@@ -1,3 +1,4 @@
+import json
 import logging
 import traceback
 
@@ -5,6 +6,8 @@ from bedrock_agentcore.runtime import BedrockAgentCoreApp
 from strands import Agent
 from strands.models import BedrockModel
 from strands.tools import tool
+
+from hooks.approval_hook import ApprovalHook
 from tools.apigateway_tool import execute_api, list_apis
 from tools.cloudwatch_tool import (
     get_agent_core_logs,
@@ -136,6 +139,7 @@ def cloudwatch_get_agent_core_logs(
 async def run_agent(payload):
     try:
         user_input = payload.get("prompt")
+        interrupt_responses = payload.get("interrupt_responses")
         logger.info(f"User input: {user_input}")
 
         custom_tools = [
@@ -159,11 +163,34 @@ async def run_agent(payload):
             tools=custom_tools,
             model=bedrock_model,
             system_prompt="Please respond flexibly according to the user's content.",
+            hooks=[ApprovalHook()],
         )
 
-        async for event in agent.stream_async(user_input):
-            if "data" in event:
-                yield event["data"]
+        if interrupt_responses:
+            logger.info(f"Resuming with interrupt responses: {interrupt_responses}")
+            async for event in agent.stream_async(
+                user_input, interrupt_responses=interrupt_responses
+            ):
+                if "data" in event:
+                    yield event["data"]
+                elif "complete" in event:
+                    complete_data = event["complete"]
+                    if complete_data.get("stop_reason") == "interrupt":
+                        interrupts = complete_data.get("interrupts", [])
+                        yield json.dumps(
+                            {"type": "interrupt", "interrupts": interrupts}
+                        )
+        else:
+            async for event in agent.stream_async(user_input):
+                if "data" in event:
+                    yield event["data"]
+                elif "complete" in event:
+                    complete_data = event["complete"]
+                    if complete_data.get("stop_reason") == "interrupt":
+                        interrupts = complete_data.get("interrupts", [])
+                        yield json.dumps(
+                            {"type": "interrupt", "interrupts": interrupts}
+                        )
     except Exception as e:
         error_msg = f"Error in run_agent: {str(e)}"
         logger.error(error_msg)
