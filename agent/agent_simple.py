@@ -104,7 +104,7 @@ def run_agent(payload):
         agent = Agent(
             tools=custom_tools,
             model=bedrock_model,
-            system_prompt="You are a tester.",
+            system_prompt="Please respond flexibly according to the user's content.",
             callback_handler=streaming_callback,
         )
 
