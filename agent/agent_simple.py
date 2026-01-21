@@ -1,5 +1,6 @@
 import logging
 import sys
+import traceback
 
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 from strands import Agent
@@ -62,23 +63,30 @@ def api_execute(api_url: str, method: str = "GET", headers: dict = None, params:
 
 @app.entrypoint
 def run_agent(payload):
-    user_input = payload.get("prompt", "List all Lambda functions")
-    logger.info(f"User input: {user_input}")
-    
-    custom_tools = [
-        lambda_invoke, lambda_get_code, lambda_list,
-        dynamodb_create, dynamodb_read, dynamodb_update, dynamodb_query,
-        api_execute
-    ]
-    
-    agent = Agent(
-        tools=custom_tools,
-        model=bedrock_model,
-        system_prompt="You are a tester."
-    )
-    
-    response = agent(user_input)
-    return response.message["content"][0]["text"]
+    try:
+        user_input = payload.get("prompt", "List all Lambda functions")
+        logger.info(f"User input: {user_input}")
+
+        custom_tools = [
+            lambda_invoke, lambda_get_code, lambda_list,
+            dynamodb_create, dynamodb_read, dynamodb_update, dynamodb_query,
+            api_execute
+        ]
+
+        agent = Agent(
+            tools=custom_tools,
+            model=bedrock_model,
+            system_prompt="You are a tester."
+        )
+
+        response = agent(user_input)
+        logger.info(f"Agent response: {response}")
+        return response.message["content"][0]["text"]
+    except Exception as e:
+        error_msg = f"Error in run_agent: {str(e)}"
+        logger.error(error_msg)
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise
 
 if __name__ == "__main__":
     app.run()
