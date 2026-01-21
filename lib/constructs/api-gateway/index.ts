@@ -26,7 +26,7 @@ export class ApiGatewayConstruct extends Construct {
         }
       : undefined;
 
-    this.api = new LambdaRestApi(this, 'Api', {
+    const api = new LambdaRestApi(this, 'Api', {
       handler: props.lambdaFunction,
       restApiName: props.apiName,
       description: `API Gateway for ${props.apiName}`,
@@ -41,18 +41,6 @@ export class ApiGatewayConstruct extends Construct {
       },
       defaultCorsPreflightOptions: corsOptions,
     });
-
-    // CloudFormation出力
-    new CfnOutput(this, 'ApiUrl', {
-      value: this.api.url,
-      description: 'API Gateway URL',
-      exportName: `${Stack.of(this).stackName}-ApiUrl`,
-    });
-
-    new CfnOutput(this, 'ApiId', {
-      value: this.api.restApiId,
-      description: 'API Gateway ID',
-      exportName: `${Stack.of(this).stackName}-ApiId`,
-    });
+    this.api = api;
   }
 }

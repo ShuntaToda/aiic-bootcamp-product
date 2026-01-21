@@ -7,34 +7,25 @@ export interface DynamoDBConstructProps {
   removalPolicy?: RemovalPolicy;
 }
 
+/**
+ * DynamoDB の作成
+ */
 export class DynamoDBConstruct extends Construct {
   public readonly table: Table;
 
   constructor(scope: Construct, id: string, props: DynamoDBConstructProps) {
     super(scope, id);
 
-    this.table = new Table(this, 'Table', {
+    const table = new Table(this, 'Table', {
       tableName: props.tableName,
       partitionKey: {
         name: 'id',
         type: AttributeType.STRING,
       },
       billingMode: BillingMode.PAY_PER_REQUEST,
-      removalPolicy: props.removalPolicy || RemovalPolicy.RETAIN,
-      pointInTimeRecovery: true, // バックアップ機能を有効化
+      removalPolicy: RemovalPolicy.RETAIN,
+      pointInTimeRecovery: true,
     });
-
-    // CloudFormation出力
-    new CfnOutput(this, 'TableName', {
-      value: this.table.tableName,
-      description: 'DynamoDB Table Name',
-      exportName: `${Stack.of(this).stackName}-TableName`,
-    });
-
-    new CfnOutput(this, 'TableArn', {
-      value: this.table.tableArn,
-      description: 'DynamoDB Table ARN',
-      exportName: `${Stack.of(this).stackName}-TableArn`,
-    });
+    this.table = table;
   }
 }
