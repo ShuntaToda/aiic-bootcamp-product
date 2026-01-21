@@ -6,3 +6,12 @@ node_modules
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+# pnpm
+pnpm-lock.yaml
+
+# Lambda functions
+lambda/**/node_modules
+lambda/**/dist
+lambda/**/*.js
+lambda/**/*.d.ts

@@ -1,0 +1,16 @@
+{
+  "name": "api-lambda",
+  "version": "1.0.0",
+  "type": "module",
+  "packageManager": "pnpm@9.0.0",
+  "dependencies": {
+    "hono": "^4.0.0",
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0",
+    "typescript": "^5.0.0",
+    "esbuild": "^0.20.0"
+  }
+}

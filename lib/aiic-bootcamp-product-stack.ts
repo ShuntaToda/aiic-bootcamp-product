@@ -1,16 +1,39 @@
-import * as cdk from 'aws-cdk-lib';
+import { Stack, StackProps, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import { DynamoDBConstruct } from './constructs/dynamo-db';
+import { LambdaConstruct } from './constructs/lambda';
+import { ApiGatewayConstruct } from './constructs/api-gateway';
 
-export class AiicBootcampProductStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+export class AiicBootcampProductStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
+    /**
+     * DynamoDB テーブルの作成
+     */
+    const dynamoDB = new DynamoDBConstruct(this, 'DynamoDB', {
+      tableName: 'aiic-bootcamp-items',
+      removalPolicy: RemovalPolicy.DESTROY, // 開発用設定（本番では変更してください）
+    });
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'AiicBootcampProductQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    /**
+     * Lambda 関数の作成
+     */
+    const lambdaFunction = new LambdaConstruct(this, 'Lambda', {
+      table: dynamoDB.table,
+      functionName: 'aiic-bootcamp-api-handler',
+      timeout: Duration.seconds(30),
+      memorySize: 128,
+    });
+
+    /**
+     * API Gateway の作成
+     */
+    new ApiGatewayConstruct(this, 'ApiGateway', {
+      lambdaFunction: lambdaFunction.function,
+      apiName: 'AIIC Bootcamp API',
+      stageName: 'vv1',
+      enableCors: true,
+    });
   }
 }
