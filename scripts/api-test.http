@@ -1,0 +1,276 @@
+### ECサイトAPI テスト - REST Client
+### API Gateway URL
+@baseUrl = https://5y67wr0uvj.execute-api.ap-northeast-1.amazonaws.com/v1
+
+### 変数定義（テスト中に自動で更新されます）
+@userId = {{createUser.response.body.user.userId}}
+@product1Id = {{createProduct1.response.body.product.productId}}
+@product2Id = {{createProduct2.response.body.product.productId}}
+@orderId = {{createOrder.response.body.order.orderId}}
+
+################################################################################
+# 1. ヘルスチェック
+################################################################################
+
+### ヘルスチェック
+GET {{baseUrl}}/
+Content-Type: application/json
+
+################################################################################
+# 2. ユーザー管理
+################################################################################
+
+### ユーザー作成
+# @name createUser
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "name": "テストユーザー",
+  "address": {
+    "zipCode": "100-0001",
+    "prefecture": "東京都",
+    "city": "千代田区",
+    "street": "千代田1-1-1"
+  }
+}
+
+### 全ユーザー取得
+GET {{baseUrl}}/users
+Content-Type: application/json
+
+### ユーザー詳細取得
+GET {{baseUrl}}/users/{{userId}}
+Content-Type: application/json
+
+### メールアドレスでユーザー検索
+GET {{baseUrl}}/users/email/test@example.com
+Content-Type: application/json
+
+### ユーザー情報更新
+PUT {{baseUrl}}/users/{{userId}}
+Content-Type: application/json
+
+{
+  "name": "更新されたユーザー",
+  "address": {
+    "zipCode": "150-0001",
+    "prefecture": "東京都",
+    "city": "渋谷区",
+    "street": "渋谷1-1-1"
+  }
+}
+
+### ユーザー削除（最後に実行）
+# DELETE {{baseUrl}}/users/{{userId}}
+# Content-Type: application/json
+
+################################################################################
+# 3. 商品管理
+################################################################################
+
+### 商品作成 1 - MacBook Pro
+# @name createProduct1
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{
+  "name": "MacBook Pro",
+  "description": "高性能ノートパソコン",
+  "price": 250000,
+  "stock": 10,
+  "category": "electronics",
+  "imageUrl": "https://example.com/macbook.jpg"
+}
+
+### 商品作成 2 - iPhone
+# @name createProduct2
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{
+  "name": "iPhone 15 Pro",
+  "description": "最新スマートフォン",
+  "price": 150000,
+  "stock": 20,
+  "category": "electronics",
+  "imageUrl": "https://example.com/iphone.jpg"
+}
+
+### 商品作成 3 - AirPods
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{
+  "name": "AirPods Pro",
+  "description": "ノイズキャンセリング機能付きイヤホン",
+  "price": 39800,
+  "stock": 50,
+  "category": "electronics",
+  "imageUrl": "https://example.com/airpods.jpg"
+}
+
+### 全商品取得
+GET {{baseUrl}}/products
+Content-Type: application/json
+
+### 商品詳細取得
+GET {{baseUrl}}/products/{{product1Id}}
+Content-Type: application/json
+
+### 商品更新（価格と在庫を変更）
+PUT {{baseUrl}}/products/{{product1Id}}
+Content-Type: application/json
+
+{
+  "price": 240000,
+  "stock": 8
+}
+
+### 商品削除（最後に実行）
+# DELETE {{baseUrl}}/products/{{product2Id}}
+# Content-Type: application/json
+
+################################################################################
+# 4. カート管理
+################################################################################
+
+### カートに商品追加 1 - MacBook Pro
+POST {{baseUrl}}/carts/{{userId}}/items
+Content-Type: application/json
+
+{
+  "productId": "{{product1Id}}",
+  "quantity": 2
+}
+
+### カートに商品追加 2 - iPhone
+POST {{baseUrl}}/carts/{{userId}}/items
+Content-Type: application/json
+
+{
+  "productId": "{{product2Id}}",
+  "quantity": 1
+}
+
+### ユーザーのカート取得
+GET {{baseUrl}}/carts/{{userId}}
+Content-Type: application/json
+
+### カート内商品の数量更新
+PUT {{baseUrl}}/carts/{{userId}}/items/{{product1Id}}
+Content-Type: application/json
+
+{
+  "quantity": 3
+}
+
+### カートから商品削除
+DELETE {{baseUrl}}/carts/{{userId}}/items/{{product2Id}}
+Content-Type: application/json
+
+### カートをクリア（最後に実行）
+# DELETE {{baseUrl}}/carts/{{userId}}
+# Content-Type: application/json
+
+################################################################################
+# 5. 注文管理
+################################################################################
+
+### 注文作成
+# @name createOrder
+POST {{baseUrl}}/orders
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "items": [
+    {
+      "productId": "{{product1Id}}",
+      "quantity": 3,
+      "price": 240000
+    },
+    {
+      "productId": "{{product2Id}}",
+      "quantity": 1,
+      "price": 150000
+    }
+  ],
+  "totalAmount": 870000,
+  "shippingAddress": {
+    "zipCode": "100-0001",
+    "prefecture": "東京都",
+    "city": "千代田区",
+    "street": "千代田1-1-1"
+  }
+}
+
+### ユーザーの注文履歴取得
+GET {{baseUrl}}/orders/user/{{userId}}
+Content-Type: application/json
+
+### 注文詳細取得
+GET {{baseUrl}}/orders/{{orderId}}
+Content-Type: application/json
+
+### 注文ステータス更新 - processing
+PUT {{baseUrl}}/orders/{{orderId}}/status
+Content-Type: application/json
+
+{
+  "status": "processing"
+}
+
+### 注文ステータス更新 - shipped
+PUT {{baseUrl}}/orders/{{orderId}}/status
+Content-Type: application/json
+
+{
+  "status": "shipped"
+}
+
+### 注文ステータス更新 - delivered
+PUT {{baseUrl}}/orders/{{orderId}}/status
+Content-Type: application/json
+
+{
+  "status": "delivered"
+}
+
+################################################################################
+# エラーケースのテスト
+################################################################################
+
+### 存在しないユーザー取得（404エラー）
+GET {{baseUrl}}/users/non-existent-user-id
+Content-Type: application/json
+
+### 存在しない商品取得（404エラー）
+GET {{baseUrl}}/products/non-existent-product-id
+Content-Type: application/json
+
+### 存在しない注文取得（404エラー）
+GET {{baseUrl}}/orders/non-existent-order-id
+Content-Type: application/json
+
+### 不正なリクエストボディ（バリデーションエラー）
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "invalidField": "test"
+}
+
+################################################################################
+# クリーンアップ（必要に応じてコメント解除）
+################################################################################
+
+### カートをクリア
+# DELETE {{baseUrl}}/carts/{{userId}}
+
+### 商品削除
+# DELETE {{baseUrl}}/products/{{product1Id}}
+
+### ユーザー削除
+# DELETE {{baseUrl}}/users/{{userId}}

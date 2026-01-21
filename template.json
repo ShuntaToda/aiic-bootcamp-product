@@ -1,0 +1,92 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Template for Creating IAM Role to Switch from Classmethod AWS Account",
+  "Parameters": {
+    "TrustedAWSAccountId": {
+      "AllowedPattern": "^[0-9]*$",
+      "Type": "String",
+      "Default": "",
+      "Description": "Trusted AWS Account ID"
+    },
+    "IAMUserName": {
+      "AllowedPattern": "^cm-[a-z.-]*$",
+      "Type": "String",
+      "Default": "cm-xxx.xxx",
+      "Description": "IAM Role Name"
+    }
+  },
+  "Resources": {
+    "IAMRoleForCmEngineer": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:iam::",
+                      {
+                        "Ref": "TrustedAWSAccountId"
+                      },
+                      ":user/",
+                      {
+                        "Ref": "IAMUserName"
+                      }
+                    ]
+                  ]
+                }
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:MultiFactorAuthPresent": "true"
+                }
+              }
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/AdministratorAccess"
+        ],
+        "Path": "/",
+        "RoleName": {
+          "Ref": "IAMUserName"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "IAMRoleArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "IAMRoleForCmEngineer",
+          "Arn"
+        ]
+      }
+    },
+    "LinkForSwitchRole": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://signin.aws.amazon.com/switchrole?roleName=",
+            {
+              "Ref": "IAMUserName"
+            },
+            "&account=",
+            {
+              "Ref": "AWS::AccountId"
+            }
+          ]
+        ]
+      }
+    }
+  }
+}

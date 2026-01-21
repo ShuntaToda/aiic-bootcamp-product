@@ -43,8 +43,10 @@ export class AiicBootcampProductStack extends Stack {
      * Bedrock Agent の作成
      */
     const bedrockAgent = new BedrockAgentConstruct(this, 'BedrockAgent', {
-      agentName: 'awsOperationsAgent',
-      region: 'us-east-1',
+      agentName: 'aws-operations-agent',
+      repositoryName: 'bedrock-agentcore-agent',
+      region: 'ap-northeast-1',
+      removalPolicy: RemovalPolicy.DESTROY, // 開発用設定（本番では変更してください）
     });
 
     // エージェントに特定リソースへのアクセス権限を付与（全テーブル）
