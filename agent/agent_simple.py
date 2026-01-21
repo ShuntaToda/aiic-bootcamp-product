@@ -5,8 +5,8 @@ from bedrock_agentcore.runtime import BedrockAgentCoreApp
 from strands import Agent
 from strands.models import BedrockModel
 from strands.tools import tool
-from tools.apigateway_tool import execute_api
-from tools.dynamodb_tool import create_item, query_items, read_item, update_item
+from tools.apigateway_tool import execute_api, list_apis
+from tools.dynamodb_tool import create_item, list_tables, query_items, read_item, update_item
 from tools.lambda_tool import get_lambda_code, invoke_lambda, list_lambdas
 
 logging.basicConfig(level=logging.INFO)
@@ -66,6 +66,12 @@ def dynamodb_query(table_name: str, key_condition: str, expr_attr_values: dict) 
 
 
 @tool
+def dynamodb_list() -> list:
+    """DynamoDBテーブルの一覧を取得します"""
+    return list_tables()
+
+
+@tool
 def api_execute(
     api_url: str,
     method: str = "GET",
@@ -75,6 +81,12 @@ def api_execute(
 ) -> dict:
     """API Gatewayエンドポイントを実行します"""
     return execute_api(api_url, method, headers, params, body)
+
+
+@tool
+def api_list() -> list:
+    """API Gatewayの一覧を取得します"""
+    return list_apis()
 
 
 @app.entrypoint
@@ -91,7 +103,9 @@ async def run_agent(payload):
             dynamodb_read,
             dynamodb_update,
             dynamodb_query,
+            dynamodb_list,
             api_execute,
+            api_list,
         ]
 
         agent = Agent(

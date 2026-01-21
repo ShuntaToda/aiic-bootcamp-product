@@ -23,3 +23,8 @@ def query_items(table_name: str, key_condition: str, expr_attr_values: dict) -> 
     table = dynamodb.Table(table_name)
     response = table.query(KeyConditionExpression=key_condition, ExpressionAttributeValues=expr_attr_values)
     return response.get('Items', [])
+
+def list_tables() -> list:
+    client = boto3.client('dynamodb')
+    response = client.list_tables()
+    return response.get('TableNames', [])
