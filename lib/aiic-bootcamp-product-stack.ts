@@ -4,6 +4,7 @@ import { DynamoDBConstruct } from './constructs/dynamo-db';
 import { LambdaConstruct } from './constructs/lambda';
 import { ApiGatewayConstruct } from './constructs/api-gateway';
 import { BedrockAgentConstruct } from './constructs/bedrock-agent';
+import { CloudFrontS3Construct } from './constructs/cloudfront-s3';
 
 export class AiicBootcampProductStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -33,7 +34,7 @@ export class AiicBootcampProductStack extends Stack {
     /**
      * API Gateway の作成
      */
-    new ApiGatewayConstruct(this, 'ApiGateway', {
+    const apiGateway = new ApiGatewayConstruct(this, 'ApiGateway', {
       lambdaFunction: lambdaFunction.function,
       apiName: 'AIIC Bootcamp EC API',
       stageName: 'v1',
@@ -56,5 +57,13 @@ export class AiicBootcampProductStack extends Stack {
     bedrockAgent.grantDynamoDBAccess(dynamoDB.usersTable.tableArn);
     bedrockAgent.grantDynamoDBAccess(dynamoDB.reviewsTable.tableArn);
     bedrockAgent.grantLambdaInvoke(lambdaFunction.function.functionArn);
+
+    /**
+     * CloudFront + S3 フロントエンド配信
+     */
+    new CloudFrontS3Construct(this, 'Frontend', {
+      apiUrl: apiGateway.apiUrl,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
   }
 }

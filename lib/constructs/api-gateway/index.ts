@@ -14,6 +14,7 @@ export interface ApiGatewayConstructProps {
 
 export class ApiGatewayConstruct extends Construct {
   public readonly api: LambdaRestApi;
+  public readonly apiUrl: string;
 
   constructor(scope: Construct, id: string, props: ApiGatewayConstructProps) {
     super(scope, id);
@@ -42,5 +43,13 @@ export class ApiGatewayConstruct extends Construct {
       defaultCorsPreflightOptions: corsOptions,
     });
     this.api = api;
+    this.apiUrl = api.url;
+
+    // CloudFormation出力
+    new CfnOutput(this, 'ApiUrl', {
+      value: this.apiUrl,
+      description: 'API Gateway URL',
+      exportName: `${Stack.of(this).stackName}-ApiUrl`,
+    });
   }
 }
