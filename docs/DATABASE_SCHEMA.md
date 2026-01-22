@@ -4,19 +4,22 @@
 
 - **データベース**: Amazon DynamoDB
 - **リージョン**: ap-northeast-1
-- **テーブル数**: 5
+- **テーブル数**: 6
+- **最終更新**: 2026-01-22
 
 ---
 
-## 1. Products テーブル（商品）
+## 1. ec-products テーブル（商品）
 
 商品情報を管理するテーブル。
 
 ### テーブル情報
 
-- **テーブル名**: `AiicBootcampProductStack-ProductsTable`
+- **テーブル名**: `ec-products`
 - **パーティションキー**: `productId` (String)
+- **ソートキー**: なし
 - **請求モード**: PAY_PER_REQUEST
+- **現在のアイテム数**: 13件
 
 ### GSI (Global Secondary Index)
 
@@ -37,6 +40,7 @@
 | stock         | Number         | ✓    | 在庫数              |
 | category      | String         | ✓    | カテゴリ            |
 | imageUrl      | String         |      | 商品画像 URL        |
+| brand         | String         |      | ブランド名          |
 | averageRating | Number         |      | 平均評価 (0-5)      |
 | reviewCount   | Number         |      | レビュー数          |
 | tags          | List\<String\> |      | タグ                |
@@ -50,8 +54,11 @@
 - `Interior`: 内装パーツ
 - `Exterior`: 外装パーツ
 - `Electronics`: 電装品
+- `electronics`: 電子機器（汎用）
 - `Maintenance`: メンテナンス
 - `Accessories`: アクセサリー
+- `entertainment`: エンターテイメント
+- `test`: テスト用
 
 ### 例
 
@@ -74,67 +81,87 @@
 
 ---
 
-## 2. Carts テーブル（カート）
+## 2. ec-carts テーブル（カート）
 
 ユーザーのショッピングカート情報を管理するテーブル。
 
 ### テーブル情報
 
-- **テーブル名**: `AiicBootcampProductStack-CartsTable`
+- **テーブル名**: `ec-carts`
 - **パーティションキー**: `userId` (String)
+- **ソートキー**: `productId` (String)
 - **請求モード**: PAY_PER_REQUEST
+- **現在のアイテム数**: 2件
+- **GSI**: なし
 
 ### 属性
 
+**注意**: このテーブルは2つの異なるデータ構造をサポートしています。
+
+#### パターン1: 個別商品アイテム
+| 属性名    | 型     | 必須 | 説明                |
+| --------- | ------ | ---- | ------------------- |
+| userId    | String | ✓    | ユーザー ID (PK)    |
+| productId | String | ✓    | 商品 ID (SK)        |
+| quantity  | Number | ✓    | 数量                |
+| addedAt   | String |      | 追加日時 (ISO 8601) |
+
+#### パターン2: カート全体（レガシー）
 | 属性名              | 型          | 必須 | 説明                |
 | ------------------- | ----------- | ---- | ------------------- |
-| userId              | String      | ✓    | ユーザー ID         |
+| userId              | String      | ✓    | ユーザー ID (PK)    |
+| cartId              | String      | ✓    | カート ID (SK)      |
+| productId           | String      | ✓    | カート ID（重複）   |
 | items               | List\<Map\> | ✓    | カート内商品リスト  |
 | items[].productId   | String      | ✓    | 商品 ID             |
-| items[].productName | String      | ✓    | 商品名              |
 | items[].quantity    | Number      | ✓    | 数量                |
 | items[].price       | Number      | ✓    | 価格                |
-| items[].imageUrl    | String      |      | 商品画像 URL        |
-| totalAmount         | Number      | ✓    | 合計金額            |
-| updatedAt           | String      | ✓    | 更新日時 (ISO 8601) |
+| createdAt           | String      |      | 作成日時 (ISO 8601) |
+| updatedAt           | String      |      | 更新日時 (ISO 8601) |
 
 ### 例
 
+#### パターン1: 個別商品アイテム
 ```json
 {
-  "userId": "demo-user-001",
+  "userId": "64f24bb6-b462-41ad-9ae2-1dd9da1e856d",
+  "productId": "a2ac7ef9-2664-44f1-8abd-f94b48fa483f",
+  "quantity": 8,
+  "addedAt": "2026-01-21T13:07:00.798Z"
+}
+```
+
+#### パターン2: カート全体
+```json
+{
+  "userId": "shinbashi-001",
+  "cartId": "cart-shinbashi-001",
+  "productId": "cart-shinbashi-001",
   "items": [
     {
-      "productId": "550e8400-e29b-41d4-a716-446655440000",
-      "productName": "ブリヂストン POTENZA S007A 245/40R18",
-      "quantity": 4,
-      "price": 28500,
-      "imageUrl": "https://example.com/tire-potenza.jpg"
-    },
-    {
-      "productId": "660e8400-e29b-41d4-a716-446655440001",
-      "productName": "Castrol EDGE 5W-30 4L",
+      "productId": "fun-product-001",
       "quantity": 2,
-      "price": 5980,
-      "imageUrl": "https://example.com/oil-castrol.jpg"
+      "price": 999
     }
   ],
-  "totalAmount": 125960,
-  "updatedAt": "2024-01-01T00:00:00.000Z"
+  "createdAt": "2026-01-21T14:53:00Z",
+  "updatedAt": "2026-01-21T14:53:00Z"
 }
 ```
 
 ---
 
-## 3. Orders テーブル（注文）
+## 3. ec-orders テーブル（注文）
 
 注文情報を管理するテーブル。
 
 ### テーブル情報
 
-- **テーブル名**: `AiicBootcampProductStack-OrdersTable`
+- **テーブル名**: `ec-orders`
 - **パーティションキー**: `orderId` (String)
+- **ソートキー**: なし
 - **請求モード**: PAY_PER_REQUEST
+- **現在のアイテム数**: 3件
 
 ### GSI (Global Secondary Index)
 
@@ -208,15 +235,17 @@
 
 ---
 
-## 4. Users テーブル（ユーザー）
+## 4. ec-users テーブル（ユーザー）
 
 ユーザー情報を管理するテーブル。
 
 ### テーブル情報
 
-- **テーブル名**: `AiicBootcampProductStack-UsersTable`
+- **テーブル名**: `ec-users`
 - **パーティションキー**: `userId` (String)
+- **ソートキー**: なし
 - **請求モード**: PAY_PER_REQUEST
+- **現在のアイテム数**: 5件
 
 ### GSI (Global Secondary Index)
 
@@ -244,32 +273,33 @@
 
 ```json
 {
-  "userId": "demo-user-001",
-  "email": "yamada@example.com",
-  "name": "山田太郎",
+  "userId": "64f24bb6-b462-41ad-9ae2-1dd9da1e856d",
+  "email": "test@example.com",
+  "name": "更新されたユーザー",
   "address": {
-    "zipCode": "100-0001",
+    "zipCode": "150-0001",
     "prefecture": "東京都",
-    "city": "千代田区",
-    "street": "千代田1-1-1"
+    "city": "渋谷区",
+    "street": "渋谷1-1-1"
   },
-  "createdAt": "2024-01-01T00:00:00.000Z",
-  "updatedAt": "2024-01-01T00:00:00.000Z"
+  "createdAt": "2026-01-21T13:06:37.644Z",
+  "updatedAt": "2026-01-21T13:06:47.337Z"
 }
 ```
 
 ---
 
-## 5. Reviews テーブル（レビュー）
+## 5. ec-reviews テーブル（レビュー）
 
 商品レビュー情報を管理するテーブル。
 
 ### テーブル情報
 
-- **テーブル名**: `AiicBootcampProductStack-ReviewsTable`
+- **テーブル名**: `ec-reviews`
 - **パーティションキー**: `productId` (String)
 - **ソートキー**: `reviewId` (String)
 - **請求モード**: PAY_PER_REQUEST
+- **現在のアイテム数**: 1件
 
 ### GSI (Global Secondary Index)
 
@@ -286,30 +316,53 @@
 | productId    | String | ✓    | 商品 ID             |
 | reviewId     | String | ✓    | レビュー ID (UUID)  |
 | userId       | String | ✓    | ユーザー ID         |
-| userName     | String | ✓    | ユーザー名          |
-| rating       | Number | ✓    | 評価 (0-5)          |
-| title        | String | ✓    | レビュータイトル    |
+| rating       | Number | ✓    | 評価 (1-5)          |
 | comment      | String | ✓    | レビューコメント    |
-| helpfulCount | Number |      | 参考になった数      |
 | createdAt    | String | ✓    | 作成日時 (ISO 8601) |
-| updatedAt    | String | ✓    | 更新日時 (ISO 8601) |
 
 ### 例
 
 ```json
 {
-  "productId": "550e8400-e29b-41d4-a716-446655440000",
-  "reviewId": "880e8400-e29b-41d4-a716-446655440003",
-  "userId": "demo-user-001",
-  "userName": "山田太郎",
+  "productId": "fun-product-001",
+  "reviewId": "review-001",
+  "userId": "shinbashi-001",
   "rating": 5,
-  "title": "グリップ力抜群！",
-  "comment": "雨の日でも安定した走行ができます。静粛性も高く満足しています。",
-  "helpfulCount": 10,
-  "createdAt": "2024-01-01T00:00:00.000Z",
-  "updatedAt": "2024-01-01T00:00:00.000Z"
+  "comment": "この商品、本当に楽しいですね！AIアシスタントが勝手に追加してくれたらしいですが、新橋の居酒屋で使えるかもしれません！★★★★★",
+  "createdAt": "2026-01-21T14:54:00Z"
 }
 ```
+
+---
+
+## 6. aiic-bootcamp-items テーブル
+
+AIIC Bootcamp用のアイテム管理テーブル。
+
+### テーブル情報
+
+- **テーブル名**: `aiic-bootcamp-items`
+- **パーティションキー**: `id` (String)
+- **ソートキー**: なし
+- **請求モード**: PAY_PER_REQUEST
+- **現在のアイテム数**: 0件（空）
+- **GSI**: なし
+
+### 属性
+
+| 属性名 | 型     | 必須 | 説明        |
+| ------ | ------ | ---- | ----------- |
+| id     | String | ✓    | アイテム ID |
+
+### 例
+
+```json
+{
+  "id": "item-001"
+}
+```
+
+**注意**: このテーブルは現在空の状態です。将来的な用途のために作成されている可能性があります。
 
 ---
 
@@ -326,9 +379,11 @@
 
 ### Carts テーブル
 
-1. **カート取得**: `GetItem` (userId)
-2. **カート更新**: `UpdateItem` (userId)
-3. **カート削除**: `DeleteItem` (userId)
+1. **カート内の特定商品取得**: `GetItem` (userId, productId)
+2. **ユーザーのカート全体取得**: `Query` (userId)
+3. **商品をカートに追加**: `PutItem`
+4. **カート内商品の数量更新**: `UpdateItem` (userId, productId)
+5. **カート内商品を削除**: `DeleteItem` (userId, productId)
 
 ### Orders テーブル
 
@@ -358,14 +413,29 @@
 
 ## 容量見積もり（参考）
 
-| テーブル | 想定レコード数 | 平均サイズ | 合計サイズ |
-| -------- | -------------- | ---------- | ---------- |
-| Products | 1,000          | 1 KB       | 1 MB       |
-| Carts    | 10,000         | 2 KB       | 20 MB      |
-| Orders   | 100,000        | 3 KB       | 300 MB     |
-| Users    | 10,000         | 500 B      | 5 MB       |
-| Reviews  | 10,000         | 1 KB       | 10 MB      |
-| **合計** |                |            | **336 MB** |
+### 現在の状態（2026-01-22）
+
+| テーブル              | 現在のレコード数 | テーブルサイズ |
+| --------------------- | ---------------- | -------------- |
+| ec-products           | 13               | 2.7 KB         |
+| ec-carts              | 2                | -              |
+| ec-orders             | 3                | 1.2 KB         |
+| ec-users              | 5                | 0.8 KB         |
+| ec-reviews            | 1                | 0.3 KB         |
+| aiic-bootcamp-items   | 0                | 0 B            |
+| **合計**              | **24**           | **~5 KB**      |
+
+### 想定容量（本番環境）
+
+| テーブル              | 想定レコード数 | 平均サイズ | 合計サイズ |
+| --------------------- | -------------- | ---------- | ---------- |
+| ec-products           | 1,000          | 1 KB       | 1 MB       |
+| ec-carts              | 10,000         | 500 B      | 5 MB       |
+| ec-orders             | 100,000        | 3 KB       | 300 MB     |
+| ec-users              | 10,000         | 500 B      | 5 MB       |
+| ec-reviews            | 10,000         | 500 B      | 5 MB       |
+| aiic-bootcamp-items   | 未定           | -          | -          |
+| **合計**              |                |            | **~316 MB** |
 
 ---
 
